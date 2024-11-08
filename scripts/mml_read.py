@@ -19,8 +19,10 @@ if __name__ == "__main__":
     parser.add_argument("--families-file", help="json data of the object returned by getao()")
     parser.add_argument("--description-file", help="json data of the object returned by getad()")
     out = parser.parse_args(sys.argv[1:])
+    if out.description_file:
+        des = machine_description(out.description_file)
+        des
+
     if out.families_file:
         fam = families(out.families_file)
         fam
-    if out.description_file:
-        machine_description(out.description_file)
