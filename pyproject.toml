@@ -8,9 +8,9 @@ version = "0.0.1"
 description = "Import matlab middle layer data to python data model"
 authors = ["Waheedullah Sulaiman Khail", "Pierre Schnizer", "Teresia Olsson"]
 license = "GPL-3.0"
-homepage = "https://github.com/hz-b/bact"
-documentation = "https://github.com/hz-b/bact"
-repository = "https://github.com/hz-b/bact"
+homepage = "https://github.com/hz-b/bact-mml-importer"
+documentation = "https://github.com/hz-b/bact-mml-importer"
+repository = "https://github.com/hz-b/bact-mml-importer"
 keywords = []
 
 [tool.poetry.dependencies]
