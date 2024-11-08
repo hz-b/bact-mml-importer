@@ -1,0 +1,18 @@
+[build-system]
+requires = [ "poetry-core>=1.0.0",]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "bact_mml_json_importer"
+version = "0.0.1"
+description = "Import matlab middle layer data to python data model"
+authors = ["Waheedullah Sulaiman Khail", "Pierre Schnizer", "Teresia Olsson"]
+license = "GPL-3.0"
+homepage = "https://github.com/hz-b/bact-mml-importer"
+documentation = "https://github.com/hz-b/bact-mml-importer"
+repository = "https://github.com/hz-b/bact-mml-importer"
+keywords = []
+
+[tool.poetry.dependencies]
+python = ">=3.7"
+jsons = "*"
