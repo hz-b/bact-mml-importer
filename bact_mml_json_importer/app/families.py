@@ -1,3 +1,4 @@
+import itertools
 from enum import Enum
 from itertools import zip_longest
 from typing import Mapping, Union, Sequence
@@ -97,7 +98,7 @@ def handle_device_info(
         conv_info_setp = handle_conversion_info(
             setpoint, ChannelType.setpoint, n_elements=n_elements
         )
-        limits = setpoint["Range"]
+        limits = setpoint.get("Range", [None] * len(conv_info_rdbk))
     else:
         conv_info_setp = [None] * len(conv_info_rdbk)
         limits = [None] * len(conv_info_rdbk)
@@ -124,8 +125,10 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
     if lattice_info is None:
         lattice_elems_info = [None]
     else:
-        lattice_type = lattice_info["ATType"]
-        at_indices = lattice_info["ATIndex"]
+        lattice_type = lattice_info.get("ATType", None)
+        if lattice_type is None:
+            lattice_type
+        at_indices = lattice_info.get("ATIndex", [None])
 
         lattice_elems_info = [
             LatticeInstance(index=lattice_index, type=lattice_type)
@@ -147,11 +150,17 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
         for sector, elem_num in family_members["DeviceList"]
     ]
 
-    dev_info = handle_device_info(
-        family_members["Monitor"],
-        family_members.get("Setpoint", None),
-        len(dev_cnt_info),
-    )
+    # For MAX-IV data ...
+    monitor = family_members.get("Monitor", None)
+    if monitor is not None:
+        dev_info = handle_device_info(
+            family_members["Monitor"],
+            family_members.get("Setpoint", None),
+            len(dev_cnt_info),
+        )
+    else:
+        # not handliny yet dedicated channels
+        dev_info = [None] * len(dev_cnt_info)
 
     wvf_idx = family_members.get("WaveRecordIndex", [None])
     if wvf_idx is None:
@@ -161,6 +170,9 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
         # Todo: can we let that pass on ?
         common_names = [None]
     else:
+        if isinstance(common_names[0], list):
+            # needed for MAX IV: R3-3/MAG/CROYY-01, R3-A101911/RF/MO-01
+            common_names = list(itertools.chain(*common_names))
         common_names = [name.strip() for name in common_names]
 
     r = [

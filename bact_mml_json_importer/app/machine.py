@@ -18,7 +18,7 @@ def handle_machine_info(
             machine=machine_json["Machine"],
             submachine=machine_json["SubMachine"],
             model=machine_json["ATModel"],
-            mode=machine_json["ModeName"],
+            mode=machine_json.get("ModeName", None),
         ),
         machine_type=MachineType(machine_json["MachineType"]),
         design_info=DesignInfo(
