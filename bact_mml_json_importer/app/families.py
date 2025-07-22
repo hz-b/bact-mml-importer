@@ -175,6 +175,7 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
             common_names = list(itertools.chain(*common_names))
         common_names = [name.strip() for name in common_names]
 
+    member_of = family_members["MemberOf"]
     r = [
         FamilyMember(
             _name=name,
@@ -184,6 +185,7 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
             dev_info=dev_info,
             lattice=lat_info,
             pos=pos,
+            member_of=member_of
         )
         for name, status, device_index, element_index, wave_record_index, survey, lat_info, pos, dev_info in zip_longest(
             common_names,

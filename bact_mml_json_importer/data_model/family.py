@@ -1,5 +1,6 @@
+import functools
 from dataclasses import dataclass
-from typing import Sequence, Union
+from typing import Sequence, Union, Dict
 
 from .device.device import DeviceInfo
 from .device.control_system_access import ControlSystemSignal
@@ -25,6 +26,7 @@ class FamilyMember:
     lattice: LatticeInstance
     pos: DeviceCountInfo
     dev_info: DeviceInfo
+    member_of : Sequence[str]
 
     @property
     def name(self):
@@ -48,19 +50,15 @@ class Family:
         return self.elements[0]
 
     def get(self, name: str) -> FamilyMember:
-        def get_dict():
-            """
-            Todo:
-                need to get result cached!
-            """
-            print(f"creating dict for family {self.name}")
-            d = {elem.name: cnt for cnt, elem in enumerate(self.elements)}
-            # are keys unique ?
-            keys = list(d)
-            assert len(keys) == len(list(set(keys)))
-            return d
+        return self._family_member_by_name[name]
 
-        return self.elements[get_dict()[name]]
+    @functools.cached_property
+    def _family_member_by_name(self) -> Dict[str, FamilyMember]:
+        d = {elem.name: elem for elem in self.elements if elem.name is not None}
+        # are keys unique ?
+        keys = list(d)
+        assert len(keys) == len(list(set(keys)))
+        return d
 
 
 @dataclass
@@ -68,16 +66,12 @@ class Families:
     elements: Sequence[Family]
 
     def get(self, name: str) -> Family:
-        def get_dict():
-            """
-            Todo:
-                need to get result cached!
-            """
-            print(f"creating dict for families")
-            d = {fam.name: cnt for cnt, fam in enumerate(self.elements)}
-            # are keys unique ?
-            keys = list(d)
-            assert len(keys) == len(list(set(keys)))
-            return d
+        return self._family_by_name[name]
 
-        return self.elements[get_dict()[name]]
+    @functools.cached_property
+    def _family_by_name(self) -> Dict[str, Family]:
+        d = {elem.name: elem for elem in self.elements if elem.name is not None}
+        # are keys unique ?
+        keys = list(d)
+        assert len(keys) == len(list(set(keys)))
+        return d

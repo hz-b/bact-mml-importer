@@ -1,7 +1,5 @@
 from enum import Enum
-from typing import Optional, Sequence
-
-from attr import dataclass
+from dataclasses import dataclass
 
 
 class MachineType(Enum):
@@ -11,7 +9,7 @@ class MachineType(Enum):
 @dataclass(frozen=True)
 class DesignInfo:
     """
-    Todo: what is this precisly
+    Todo: what is this preciesly
     """
 
     energy: float
@@ -24,6 +22,7 @@ class DesignInfo:
 class AdjustmentInfo:
     #: what's that seems to be r
     delta_radio_frequency_dispersion: float
+    #: master clock frequency ?
     mcf: float
     # is that not
     tune_delay: int
