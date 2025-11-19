@@ -257,9 +257,11 @@ def handle_families(families_json: Mapping[str, Union[str, Mapping]]) -> Familie
         if name in ["CAVITY", "LANDAU"]:
             return None
         try:
+            elems = handle_family_members(families_info, t_type)
+            elems = [elem for elem in elems if elem is not None]
             r =  Family(
                 name=families_info.get("FamilyName"),
-                elements=handle_family_members(families_info, t_type),
+                elements=elems
             )
         except Exception as exc:
 
