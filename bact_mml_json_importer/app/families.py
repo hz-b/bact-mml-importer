@@ -1,4 +1,5 @@
 import itertools
+import logging
 from enum import Enum
 from itertools import zip_longest
 from typing import Mapping, Union, Sequence
@@ -14,6 +15,7 @@ from ..data_model.family import DeviceCountInfo, FamilyMember, Family, Families
 from ..data_model.lattice.lattice_element_info import LatticeInstance
 from ..data_model.survey_info import SurveyInformation
 
+logger = logging.getLogger("bact-mml-importer")
 
 class ChannelType(Enum):
     readback = "readback"
@@ -203,10 +205,18 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
 def handle_families(families_json: Mapping[str, Union[str, Mapping]]) -> Families:
     def convert(families_info):
         t_type = families_info.get("FamilyType")
-        return Family(
-            name=families_info.get("FamilyName"),
-            elements=handle_family_members(families_info, t_type),
-        )
+        name = families_info.get("FamilyName")
+        if name in ["SHUNT", "CAVITY", "LANDAU"]:
+            return None
+        try:
+            r = Family(
+                name=name,
+                elements=handle_family_members(families_info, t_type),
+            )
+        except Exception as exc:
+            logger.error(f"Failed to procecss family {name}")
+            raise exc
+        return r
 
     return Families(
         elements=[convert(families_info) for _, families_info in families_json.items()]
