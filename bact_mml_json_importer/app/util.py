@@ -1,6 +1,11 @@
 import pprint
 from typing import Mapping, Sequence
 
+import logging
+
+logger = logging.getLogger("bact-mml-importer")
+
+
 
 def make_single_entry_sequence_of_one(
     family_members: Mapping[str, Mapping], verbose=False
@@ -15,13 +20,22 @@ def make_single_entry_sequence_of_one(
         return family_members
 
     nf = family_members.copy()
+    name = family_members["FamilyName"]
     # first level
     for key in ["CommonNames", "ElementList", "Status", "DeviceList", "Position"]:
         nf[key] = [family_members.get(key, None)]
     # lattice info level
     if nf.get("AT", None) is not None:
-        for key in ["ATIndex"]:
-            nf["AT"][key] = [family_members["AT"][key]]
+        key = "ATIndex"
+        val = family_members["AT"].get(key, None)
+        if val is not None:
+            nf["AT"][key] = [val]
+        else:
+            logger.warning(f"failed to retrieve {key} for {name}")
+            # do a second try
+            key = "ATParameterGroup"
+            data_entry, = family_members["AT"].get(key)
+            nf["AT"]["ATIndex"] = [datum["ElemIndex"] for datum in data_entry]
 
     def conv_dict(ref):
         return {
