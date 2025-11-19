@@ -40,13 +40,20 @@ def split_tango_descriptor(descriptor: str):
 
 
 def build_magnet_data(elem, *, type_name: str, subtype: str) -> Magnet:
+    fwd_curve = None
+    bwd_curve = None
+    trl = None
+    if elem.dev_info:
+        fwd_curve = elem.dev_info.monitor.info.forward
+        bwd_curve = elem.dev_info.monitor.info.forward
+        trl =  split_tango_descriptor(elem.dev_info.setpoint.comm.sig_name)["trl"]
     return Magnet(
         type=type_name,
         subtype=subtype,
         name=elem._name,
-        forward_curve=elem.dev_info.monitor.info.forward,
-        backward_curve=elem.dev_info.monitor.info.backward,
-        pc=split_tango_descriptor(elem.dev_info.setpoint.comm.sig_name)["trl"]
+        forward_curve=fwd_curve,
+        backward_curve=bwd_curve,
+        pc=trl
     )
 
 
