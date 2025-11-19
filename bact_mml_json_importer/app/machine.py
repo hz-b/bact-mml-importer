@@ -17,20 +17,20 @@ def handle_machine_info(
         standard_meta_data=MachineMetaData(
             machine=machine_json["Machine"],
             submachine=machine_json["SubMachine"],
-            model=machine_json["ATModel"],
+            model=machine_json.get("ATModel", None),
             mode=machine_json.get("ModeName", None),
         ),
         machine_type=MachineType(machine_json["MachineType"]),
-        design_info=DesignInfo(
-            #: Todo: convert to eV?
-            energy=machine_json["Energy"],
-            length=machine_json["Circumference"],
-            injection_energy=machine_json["InjectionEnergy"],
-            harmonic_number=machine_json["HarmonicNumber"],
-        ),
-        adjustment_info=AdjustmentInfo(
-            delta_radio_frequency_dispersion=machine_json["DeltaRFDisp"],
-            mcf=machine_json["MCF"],
-            tune_delay=machine_json["TuneDelay"],
-        ),
+        design_info=None, #DesignInfo(
+#            #: Todo: convert to eV?
+ #           energy=machine_json["Energy"],
+ #           length=machine_json["Circumference"],
+ #           injection_energy=machine_json["InjectionEnergy"],
+ #           harmonic_number=machine_json["HarmonicNumber"],
+  #      ),
+        adjustment_info= None #AdjustmentInfo(
+#            delta_radio_frequency_dispersion=machine_json["DeltaRFDisp"],
+#            mcf=machine_json["MCF"],
+#            tune_delay=machine_json["TuneDelay"],
+#        ),
     )

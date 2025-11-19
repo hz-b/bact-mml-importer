@@ -1,8 +1,7 @@
 from enum import Enum
 from typing import Optional, Sequence
 
-from attr import dataclass
-
+from dataclasses import dataclass
 
 class MachineType(Enum):
     storage_ring = "StorageRing"

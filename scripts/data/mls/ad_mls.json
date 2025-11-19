@@ -1,0 +1,69 @@
+{
+  "Machine": "MLS",
+  "SubMachine": "StorageRing",
+  "MachineType": "StorageRing",
+  "OperationalMode": "0.62862 GeV, User Mode",
+  "Energy": 0.62862000000000007,
+  "InjectionEnergy": 0.105,
+  "HarmonicNumber": 80,
+  "DeltaRFDisp": 3,
+  "ExtraDelay": 5,
+  "TuneDelay": 5,
+  "ATModel": "mlsatdeck",
+  "ModeName": "StandardUser",
+  "DeltaRFChro": [
+    -10,
+    -5,
+    0,
+    5,
+    10
+  ],
+  "MCF": 0.0280626277866732,
+  "Directory": {
+    "DataRoot": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/",
+    "OpsData": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingOpsData/StandardUser/",
+    "BPMData": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/BPM/",
+    "TuneData": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/Tune/",
+    "ChroData": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/Chromaticity/",
+    "DispData": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/Dispersion/",
+    "ConfigData": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/MachineConfig/",
+    "QMS": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/QMS/",
+    "BPMResponse": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/Response/BPM/",
+    "TuneResponse": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/Response/Tune/",
+    "ChroResponse": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/Response/Chromaticity/",
+    "DispResponse": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/Response/Dispersion/",
+    "SkewResponse": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingData/StandardUser/Response/Skew/"
+  },
+  "OpsData": {
+    "PhysDataFile": "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingOpsData/MLSphysdata.mat",
+    "LatticeFile": "GoldenConfig",
+    "InjectionFile": "InjectionConfig",
+    "BPMSigmaFile": "GoldenBPMSigma",
+    "DispFile": "GoldenDisp",
+    "BPMRespFile": "GoldenBPMResp",
+    "TuneRespFile": "GoldenTuneResp",
+    "ChroRespFile": "GoldenChroResp",
+    "DispRespFile": "GoldenDispResp",
+    "SkewRespFile": "GoldenSkewResp",
+    "RespFiles": [
+      "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingOpsData/StandardUser/GoldenBPMResp",
+      "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingOpsData/StandardUser/GoldenTuneResp",
+      "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingOpsData/StandardUser/GoldenChroResp",
+      "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingOpsData/StandardUser/GoldenDispResp",
+      "/home/a3744/Documents/software/mml/mml-hzb/machine/MLS/StorageRingOpsData/StandardUser/GoldenSkewResp"
+    ]
+  },
+  "Default": {
+    "BPMArchiveFile": "BPM",
+    "TuneArchiveFile": "Tune",
+    "ChroArchiveFile": "Chro",
+    "DispArchiveFile": "Disp",
+    "CNFArchiveFile": "CNF",
+    "BPMRespFile": "BPMRespMat",
+    "TuneRespFile": "TuneRespMat",
+    "ChroRespFile": "ChroRespMat",
+    "DispRespFile": "DispRespMat",
+    "SkewRespFile": "SkewRespMat"
+  },
+  "Circumference": 48.000000000000007
+}

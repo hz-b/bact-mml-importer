@@ -8,16 +8,34 @@ from ..data_model.device.control_system_access import (
     ControlSystemSignalType,
     ControlSystemSignal,
 )
-from ..data_model.device.conversion_info import ConversionInfo
+from ..data_model.device.conversion_info import ConversionInfo, CurvePoint, CurveBasedConversionInfo
 from ..data_model.device.device import InfoCommChannel, UnitNames, DeviceInfo
 from ..data_model.family import DeviceCountInfo, FamilyMember, Family, Families
 from ..data_model.lattice.lattice_element_info import LatticeInstance
 from ..data_model.survey_info import SurveyInformation
 
+import numpy as np
 
 class ChannelType(Enum):
     readback = "readback"
     setpoint = "setpoint"
+
+
+def zip_communication_conversion(info, comm_info):
+    if len(info) == 1 and len(comm_info) > 1:
+        for c in comm_info:
+            yield info, c
+    else:
+        yield from zip_longest(info, comm_info)
+
+
+def array_to_curve_based_conversion_info(arr):
+    return CurveBasedConversionInfo(
+        curve=[
+            CurvePoint(indep=float(indep), dep=float(dep))
+            for indep, dep in zip(arr[0], arr[1])
+        ]
+    )
 
 
 def handle_conversion_info(
@@ -53,24 +71,20 @@ def handle_conversion_info(
     len(offsets)
     len(meta_gain)
 
-    hw2physics = conversion_info["HW2PhysicsParams"]
+    hw2physics = conversion_info.get("HW2PhysicsParams", None)
+    L = L2 = None
     try:
-        len(hw2physics)
+        L = len(hw2physics)
     except TypeError:
         hw2physics = [hw2physics]
 
-    physics2hw = conversion_info["Physics2HWParams"]
+    physics2hw = conversion_info.get("Physics2HWParams", None)
     try:
-        len(physics2hw)
+        L2 = len(physics2hw)
     except TypeError:
         physics2hw = [physics2hw]
 
-    conv_info_dm = [
-        ConversionInfo(offset=offset, meta_gain=meta_gain, backward=hw2p, forward=p2hw)
-        for offset, meta_gain, hw2p, p2hw in zip(
-            offsets, meta_gain, hw2physics, physics2hw
-        )
-    ]
+    assert L == L2, "Length of HW2PhysicsParams and Physics2HWParams differ"
 
     comm_dm = [
         ControlSystemSignal(
@@ -78,9 +92,41 @@ def handle_conversion_info(
         )
         for sig_name in channels
     ]
+
+
+
+    if L == 1 and len(comm_dm) > 1:
+        # how to improve the hack
+        hw2physics = hw2physics[0]
+        assert len(physics2hw) == 1
+        physics2hw = physics2hw[0]
+        if len(hw2physics)== len(comm_dm) * 2:
+            assert len(hw2physics) % 2 == 0, f"Length of HW2PhysicsParams is not even"
+            hw2p_a = np.array(hw2physics)
+            p2hw_a = np.array(physics2hw)
+            assert hw2p_a.shape[0] == p2hw_a.shape[0], "Sanity check failed"
+            hw2p_a = hw2p_a.reshape([2, len(hw2physics) // 2, hw2p_a.shape[-1]])
+            p2hw_a = p2hw_a.reshape([2, len(physics2hw) // 2, p2hw_a.shape[-1]])
+            hw2p_a = hw2p_a.transpose([1, 0, 2])
+            p2hw_a = p2hw_a.transpose([1, 0, 2])
+            hw2physics = [array_to_curve_based_conversion_info(curve) for curve in hw2p_a]
+            physics2hw = [array_to_curve_based_conversion_info(curve) for curve in p2hw_a]
+        else:
+            pass
+           # assert   f"Length of HW2PhysicsParams {len(hw2physics)} does not match number of channels  {len(comm_dm)} * 2"
+
+
+    conv_info_dm = [
+        ConversionInfo(offset=offset, meta_gain=meta_gain, backward=hw2p, forward=p2hw)
+        # Todo: change it to a zip that raises an exceptions if one of them is not as long as all oterhs
+        for offset, meta_gain, hw2p, p2hw in zip_longest(
+            offsets, meta_gain, hw2physics, physics2hw
+        )
+    ]
+
     info_comms = [
         InfoCommChannel(info=info, comm=comm)
-        for info, comm in zip(conv_info_dm, comm_dm)
+        for info, comm in zip_communication_conversion(info=conv_info_dm, comm_info=comm_dm)
     ]
     return info_comms
 
@@ -103,7 +149,7 @@ def handle_device_info(
         conv_info_setp = [None] * len(conv_info_rdbk)
         limits = [None] * len(conv_info_rdbk)
     unit_names = UnitNames(
-        hardware=readback["HWUnits"], physics=readback["PhysicsUnits"]
+        hardware=readback.get("HWUnits", None), physics=readback.get("PhysicsUnits", None)
     )
     getter = readback.get("SpecialFunctionGet")
 
