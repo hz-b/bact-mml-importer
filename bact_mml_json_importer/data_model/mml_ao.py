@@ -1,39 +1,46 @@
 import logging
 from typing import Mapping, Union, Sequence, Tuple, Dict
 
-from jsons import DeserializationError
 from pydantic import BaseModel, ValidationError
-
 
 logger = logging.getLogger("bact-mml-importer")
 
 
 class ATElementsInfo(BaseModel):
-    """To which
+    """To which element does the device connect to
+
+    Should be always a sequence of integers
     """
     ATType: str
     ATIndex: int | Sequence[int] | Sequence[Sequence[int]]
 
+
 # @dataclass
 class ConversionFunctionHandle(BaseModel):
+    """function name and file name that does the conversion
+
+    Todo:
+        Understand the type simple
+    """
     file: str
     function: str
     type: str
 
 
-# @dataclass
 class ConversionFunction(BaseModel):
+    # delegate to match ao object
     function_handle: ConversionFunctionHandle
 
 
-# @dataclass
 class _MonitorBase(BaseModel):
     ChannelNames: Sequence[str] | str
     MemberOf: list[str] | None = None
     DataType: str
     Units: str
-    HWUnits: str
-    PhysicsUnits:str
+    # required for ALS ao data: HWUnits shown as empty string for RF data
+    HWUnits: str | list[str]
+    # required for ALS ao data : HWUnits shown as empty string for RF data
+    PhysicsUnits: str | list[str]
     Mode: str | None  = None
     MetaGain:  Sequence[float] | None  = None
     PhysicalUnits: str | None  = None
@@ -43,7 +50,6 @@ class _MonitorBase(BaseModel):
     Physics2HWFcn: ConversionFunction | None = None
 
 
-#@dataclass
 class MonitorDataModel(_MonitorBase):
     pass
     # model_config = ConfigDict(extra='allow')
@@ -56,14 +62,14 @@ class SetpointDataModel(_MonitorBase):
 
 # @dataclass
 class FamilyInfoCollection(BaseModel):
-    Status: Union[int, Sequence[int]]
-    Position : Sequence[float] | None = None
+    MemberOf: Sequence[str] | str
+    CommonNames: Sequence[str] | str | None = None
     DeviceList : Sequence[Tuple[int,int]] | Tuple[int,int]
     ElementList : Sequence[int] | int
-    MemberOf: Sequence[str] | str
+    Status: Union[int, Sequence[int]]
+    Position : Sequence[float] | float | None = None
     Monitor: MonitorDataModel | None = None
     Setpoint: SetpointDataModel | None = None
-    CommonNames: Sequence[str] | str | None = None
     AT: ATElementsInfo | None = None
 
 #    model_config = ConfigDict(extra='allow')
@@ -72,14 +78,10 @@ class FamilyInfoCollection(BaseModel):
 def load(data: Mapping[str, Union[str, Mapping]]) -> Dict[str, FamilyInfoCollection]:
     d = dict()
     for family_name, item in data.items():
-        if family_name in ["TUNE", "DCCT"]:
-            continue
+        # if family_name in ["TUNE", "DCCT"]:
+        #     continue
         try:
             model = FamilyInfoCollection(**item)
-            # model = jsons.load(item, FamilyInfoCollection)
-        except DeserializationError as de:
-            logger.error(f"Conversion failed for family {family_name}: de" )
-            continue
         except ValidationError as ve:
             logger.error(f"Conversion failed for family {family_name}: {ve}" )
             continue
