@@ -1,7 +1,9 @@
 import logging
-from typing import Mapping, Union, Sequence, Tuple, Dict
+from typing import Mapping, Union, Sequence, Tuple, Dict, TypeVar
 
 from pydantic import BaseModel, ValidationError
+
+from bact_mml_json_importer.data_model.utils import normalize_nested_sequence, ensure_sequence
 
 logger = logging.getLogger("bact-mml-importer")
 
@@ -13,6 +15,9 @@ class ATElementsInfo(BaseModel):
     """
     ATType: str
     ATIndex: int | Sequence[int] | Sequence[Sequence[int]]
+
+    def get_element_indices(self) -> list[list[int]]:
+        return normalize_nested_sequence(self.ATIndex, int)
 
 
 # @dataclass
@@ -72,7 +77,15 @@ class FamilyInfoCollection(BaseModel):
     Setpoint: SetpointDataModel | None = None
     AT: ATElementsInfo | None = None
 
-#    model_config = ConfigDict(extra='allow')
+    # model_config = ConfigDict(extra='allow')
+
+    def get_device_list(self) -> list[tuple[int, int]]:
+        if isinstance(self.DeviceList, tuple):
+            return [self.DeviceList]
+        return self.DeviceList
+
+    def member_of(self) -> Sequence[str]:
+        return ensure_sequence(self.MemberOf)
 
 
 def load(data: Mapping[str, Union[str, Mapping]]) -> Dict[str, FamilyInfoCollection]:
