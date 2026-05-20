@@ -59,7 +59,7 @@ def handle_conversion_info(
 
     try:
         hw2physics = conversion_info["HW2PhysicsParams"]
-        hw2physics = [float(val) for val in np.atleast_1d(hw2physics)]
+        hw2physics = np.atleast_1d(hw2physics)
     except KeyError as ke:
         logger.error("No HW2PhysicsParams in conversion_info for ")
         hw2physics = [None]
@@ -68,7 +68,7 @@ def handle_conversion_info(
     # todo: use np.atleast_1d
     try:
         physics2hw = conversion_info["Physics2HWParams"]
-        physics2hw = [float(val) for val in np.atleast_1d(physics2hw)]
+        physics2hw = np.atleast_1d(physics2hw)
     except KeyError:
         physics2hw = [None]
 
