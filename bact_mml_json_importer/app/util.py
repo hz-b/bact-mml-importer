@@ -5,11 +5,16 @@ from typing import Mapping, Sequence
 def make_single_entry_sequence_of_one(
     family_members: Mapping[str, Mapping], verbose=False
 ):
-    """handle families that consit only of one member"""
+    """handle families that consists only of one member"""
     if verbose:
         print("input --------- ")
-        pprint.pprint(family_members)
+        pprint.pprint(family_members, compact=True)
         print("input ========")
+
+    try:
+        element_list = family_members["ElementList"]
+    except KeyError:
+        return None
 
     if isinstance(family_members["ElementList"], Sequence):
         return family_members
@@ -27,6 +32,7 @@ def make_single_entry_sequence_of_one(
         return {
             key: [ref[key]]
             for key in ["ChannelNames", "HW2PhysicsParams", "Physics2HWParams"]
+            if key in ref
         }
 
     for key in ["Monitor", "Setpoint"]:

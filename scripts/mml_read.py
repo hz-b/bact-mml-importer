@@ -7,12 +7,15 @@ from bact_mml_json_importer.app.machine import handle_machine_info
 
 
 def families(filename: str):
-    return handle_families(read_mml_in_json(filename=filename))
+    data = read_mml_in_json(filename=filename)
+    # Todo: remove that if feasable
+    data = data["ao"]
+    return handle_families(data)
 
 
 def machine_description(filename: str):
-    return handle_machine_info(read_mml_in_json(filename=filename))
-
+    r = handle_machine_info(read_mml_in_json(filename=filename))
+    return r
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
