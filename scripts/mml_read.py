@@ -1,17 +1,29 @@
+from typing import Sequence, Union
+
 from bact_mml_json_importer.app.families import handle_families
 import argparse
 import sys
 
 from bact_mml_json_importer.app.inp import read_mml_in_json
 from bact_mml_json_importer.app.machine import handle_machine_info
+from bact_mml_json_importer.data_model.mml_ao import load
+from bact_mml_json_importer.util import clear_hw2physics
 
 
 def families(filename: str):
-    return handle_families(read_mml_in_json(filename=filename))
+    data = read_mml_in_json(filename=filename)
+
+    clear_hw2physics(data["BPMx"], copy=False)
+    clear_hw2physics(data["BPMy"], copy=False)
+    r = load(data)
+    # Todo: remove that if feasable
+    # data = data["ao"]
+    return handle_families(data)
 
 
 def machine_description(filename: str):
-    return handle_machine_info(read_mml_in_json(filename=filename))
+    r = handle_machine_info(read_mml_in_json(filename=filename))
+    return r
 
 
 if __name__ == "__main__":

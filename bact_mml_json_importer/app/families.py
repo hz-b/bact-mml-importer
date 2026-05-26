@@ -1,7 +1,10 @@
 import itertools
+import logging
 from enum import Enum
 from itertools import zip_longest
 from typing import Mapping, Union, Sequence
+
+import numpy as np
 
 from .util import make_single_entry_sequence_of_one
 from ..data_model.device.control_system_access import (
@@ -14,6 +17,7 @@ from ..data_model.family import DeviceCountInfo, FamilyMember, Family, Families
 from ..data_model.lattice.lattice_element_info import LatticeInstance
 from ..data_model.survey_info import SurveyInformation
 
+logger = logging.getLogger("bact-mml-exporter")
 
 class ChannelType(Enum):
     readback = "readback"
@@ -53,21 +57,24 @@ def handle_conversion_info(
     len(offsets)
     len(meta_gain)
 
-    hw2physics = conversion_info["HW2PhysicsParams"]
     try:
-        len(hw2physics)
-    except TypeError:
-        hw2physics = [hw2physics]
+        hw2physics = conversion_info["HW2PhysicsParams"]
+        hw2physics = np.atleast_1d(hw2physics)
+    except KeyError as ke:
+        logger.error("No HW2PhysicsParams in conversion_info for ")
+        hw2physics = [None]
+    # todo: use np.atleast_1d
 
-    physics2hw = conversion_info["Physics2HWParams"]
+    # todo: use np.atleast_1d
     try:
-        len(physics2hw)
-    except TypeError:
-        physics2hw = [physics2hw]
+        physics2hw = conversion_info["Physics2HWParams"]
+        physics2hw = np.atleast_1d(physics2hw)
+    except KeyError:
+        physics2hw = [None]
 
     conv_info_dm = [
         ConversionInfo(offset=offset, meta_gain=meta_gain, backward=hw2p, forward=p2hw)
-        for offset, meta_gain, hw2p, p2hw in zip(
+        for offset, meta_gain, hw2p, p2hw in zip_longest(
             offsets, meta_gain, hw2physics, physics2hw
         )
     ]
@@ -121,6 +128,8 @@ def handle_device_info(
 
 def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
     family_members = make_single_entry_sequence_of_one(family_members)
+    if not family_members:
+        return None
     lattice_info = family_members.get("AT", None)
     if lattice_info is None:
         lattice_elems_info = [None]
@@ -136,7 +145,7 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
         ]
     del lattice_info
 
-    survey_pos = family_members.get("Position", None)
+    survey_pos = np.atleast_1d(family_members.get("Position", None))
     if survey_pos is None:
         survey_device_info = [None]
     else:
@@ -173,7 +182,11 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
         if isinstance(common_names[0], list):
             # needed for MAX IV: R3-3/MAG/CROYY-01, R3-A101911/RF/MO-01
             common_names = list(itertools.chain(*common_names))
-        common_names = [name.strip() for name in common_names]
+        def clear_name(name):
+            if name is None:
+                return None
+            return name.strip()
+        common_names = [clear_name(name) for name in common_names]
 
     r = [
         FamilyMember(
@@ -187,9 +200,9 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
         )
         for name, status, device_index, element_index, wave_record_index, survey, lat_info, pos, dev_info in zip_longest(
             common_names,
-            family_members["Status"],
-            family_members["DeviceList"],
-            family_members["ElementList"],
+            np.atleast_1d(family_members["Status"]),
+            np.atleast_2d(family_members["DeviceList"]),
+            np.atleast_1d(family_members["ElementList"]),
             wvf_idx,
             survey_device_info,
             lattice_elems_info,
