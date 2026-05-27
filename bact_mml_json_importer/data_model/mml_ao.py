@@ -67,6 +67,14 @@ class SetpointDataModel(_MonitorBase):
 
 # @dataclass
 class FamilyInfoCollection(BaseModel):
+    """Collected info entries following Matlab Middle Layer ao object
+
+    Todo:
+        make the model more stringent: e.g. MemberOf shall be always a
+        sequence. Need to see what pydantic provides for that
+
+        Need to address channels beyond Monitor and Setpoint
+    """
     MemberOf: Sequence[str] | str
     CommonNames: Sequence[str] | str | None = None
     DeviceList : Sequence[Tuple[int,int]] | Tuple[int,int]
@@ -86,6 +94,9 @@ class FamilyInfoCollection(BaseModel):
 
     def member_of(self) -> Sequence[str]:
         return ensure_sequence(self.MemberOf)
+
+    def get_device_index(self, sector:int, child:int) -> int:
+        return self.get_device_list().index((sector, child))
 
 
 def load(data: Mapping[str, Union[str, Mapping]]) -> Dict[str, FamilyInfoCollection]:
