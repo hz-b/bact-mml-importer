@@ -82,6 +82,7 @@ class FamilyInfoCollection(BaseModel):
     Status: Union[int, Sequence[int]]
     Position : Sequence[float] | float | None = None
     Monitor: MonitorDataModel | None = None
+    Offset: Sequence[float] | None = None
     Setpoint: SetpointDataModel | None = None
     AT: ATElementsInfo | None = None
 
