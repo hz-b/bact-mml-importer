@@ -169,7 +169,7 @@ def handle_device_info(
     return r
 
 
-def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
+def handle_family_membersw(family_members: Mapping[str, Mapping], t_type: str):
     family_members = make_single_entry_sequence_of_one(family_members)
     lattice_info = family_members.get("AT", None)
     if lattice_info is None:
@@ -182,7 +182,7 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
 
         lattice_elems_info = [
             LatticeInstance(index=lattice_index, type=lattice_type)
-            for lattice_index in zip(at_indices)
+            for lattice_index in at_indices
         ]
     del lattice_info
 
@@ -249,6 +249,248 @@ def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
     ]
     return r
 
+def handle_family_membersaa(family_members: Mapping[str, Mapping], t_type: str):
+    family_members = make_single_entry_sequence_of_one(family_members)
+
+    # -----------------------------
+    # Number of magnets
+    # -----------------------------
+    device_list = family_members["DeviceList"]
+    n_magnets = len(device_list)
+
+    # -----------------------------
+    # LATTICE HANDLING
+    # -----------------------------
+    lattice_info = family_members.get("AT", None)
+
+    if lattice_info is None:
+        lattice_elems_info = [None] * n_magnets
+    else:
+        lattice_type = lattice_info.get("ATType", None)
+        at_param = lattice_info.get("ATParameterGroup", None)
+        at_indices = None
+
+        # ************* SQFI / SQFO CASE *************
+        # Format: ATParameterGroup = [ [144 entries] ]
+        if (
+            isinstance(at_param, list)
+            and len(at_param) == 1
+            and isinstance(at_param[0], list)
+            and len(at_param[0]) > n_magnets         # indicates multiplexed data
+        ):
+            inner = at_param[0]  # list of 144 (or more)
+            seen = set()
+            unique = []
+            for entry in inner:
+                idx = entry["ElemIndex"]
+                if idx not in seen:
+                    seen.add(idx)
+                    unique.append(idx)
+
+            # unique now contains the correct 48 AT indices
+            at_indices = unique
+
+        # ************* HCM / VCM NORMAL CASE *************
+        else:
+            at_indices = lattice_info.get("ATIndex", [None])
+
+        # -----------------------------
+        # normalize to exactly n_magnets
+        # -----------------------------
+        if len(at_indices) < n_magnets:
+            at_indices = at_indices + [None] * (n_magnets - len(at_indices))
+        elif len(at_indices) > n_magnets:
+            at_indices = at_indices[:n_magnets]
+
+        lattice_elems_info = [
+            LatticeInstance(index=idx, type=lattice_type)
+            for idx in at_indices
+        ]
+
+    # -----------------------------
+    # SURVEY
+    # -----------------------------
+    survey_pos = family_members.get("Position", None)
+    if survey_pos is None:
+        survey_device_info = [None] * n_magnets
+    else:
+        survey_device_info = [
+            SurveyInformation(longitudinal_position=s)
+            for s in survey_pos
+        ]
+
+    # -----------------------------
+    # DEVICE COUNT INFO
+    # -----------------------------
+    dev_cnt_info = [
+        DeviceCountInfo(sector=sector, element_number=elem_num)
+        for sector, elem_num in device_list
+    ]
+
+    # -----------------------------
+    # DEVICE INFO
+    # -----------------------------
+    monitor = family_members.get("Monitor", None)
+    if monitor is not None:
+        dev_info = handle_device_info(
+            family_members["Monitor"],
+            family_members.get("Setpoint", None),
+            n_magnets,
+        )
+    else:
+        dev_info = [None] * n_magnets
+
+    # -----------------------------
+    # COMMON NAMES
+    # -----------------------------
+    wvf_idx = family_members.get("WaveRecordIndex", [None])
+
+    common_names = family_members.get("CommonNames", None)
+    if common_names is None:
+        common_names = [None] * n_magnets
+    else:
+        if isinstance(common_names[0], list):
+            common_names = list(itertools.chain(*common_names))
+        common_names = [name.strip() for name in common_names]
+
+        if len(common_names) < n_magnets:
+            common_names = common_names + [None] * (n_magnets - len(common_names))
+        else:
+            common_names = common_names[:n_magnets]
+
+    # -----------------------------
+    # FINAL FAMILY MEMBERS
+    # -----------------------------
+    r = [
+        FamilyMember(
+            _name=name,
+            type=t_type,
+            status=status,
+            survey=survey,
+            dev_info=dev_i,
+            lattice=lat_i,
+            pos=pos,
+        )
+        for name, status, dev_list_entry, elem_entry,
+            w_record, survey, lat_i, pos, dev_i
+        in zip_longest(
+            common_names,
+            family_members["Status"],
+            family_members["DeviceList"],
+            family_members["ElementList"],
+            wvf_idx,
+            survey_device_info,
+            lattice_elems_info,
+            dev_cnt_info,
+            dev_info,
+        )
+    ]
+
+    return r
+
+def handle_family_members(family_members: Mapping[str, Mapping], t_type: str):
+    family_members = make_single_entry_sequence_of_one(family_members)
+    fam_name = family_members["FamilyName"].lower()
+
+    lattice_info = family_members.get("AT", None)
+
+    if lattice_info is None:
+        lattice_elems_info = [None]
+    else:
+        lattice_type = lattice_info.get("ATType", None)
+        at_indices = lattice_info.get("ATIndex", [None])
+
+        lattice_elems_info = [
+            LatticeInstance(index=lattice_index, type=lattice_type)
+            for lattice_index in at_indices
+        ]
+
+    survey_pos = family_members.get("Position", None)
+    if survey_pos is None:
+        survey_device_info = [None]
+    else:
+        survey_device_info = [
+            SurveyInformation(longitudinal_position=s) for s in survey_pos
+        ]
+
+    dev_cnt_info = [
+        DeviceCountInfo(sector=sector, element_number=elem_num)
+        for sector, elem_num in family_members["DeviceList"]
+    ]
+
+    monitor = family_members.get("Monitor", None)
+    if monitor is not None:
+        dev_info = handle_device_info(
+            family_members["Monitor"],
+            family_members.get("Setpoint", None),
+            len(dev_cnt_info),
+        )
+    else:
+        dev_info = [None] * len(dev_cnt_info)
+
+    wvf_idx = family_members.get("WaveRecordIndex", [None])
+
+    common_names = family_members.get("CommonNames", None)
+    if common_names is None:
+        common_names = [None]
+    else:
+        if isinstance(common_names[0], list):
+            common_names = list(itertools.chain(*common_names))
+        common_names = [name.strip() for name in common_names]
+
+    # ORIGINAL LIST (SQFI makes 144 here)
+    r = [
+        FamilyMember(
+            _name=fam_name + str(lat_info.index) if lat_info else None,
+            type=t_type,
+            status=status,
+            survey=survey,
+            dev_info=dev_info,
+            lattice=lat_info,
+            pos=pos,
+        )
+        for name, status, device_index, element_index, wave_record_index,
+            survey, lat_info, pos, dev_info in zip_longest(
+                common_names,
+                family_members["Status"],
+                family_members["DeviceList"],
+                family_members["ElementList"],
+                wvf_idx,
+                survey_device_info,
+                lattice_elems_info,
+                dev_cnt_info,
+                dev_info,
+            )
+    ]
+
+    # ----------------------------------------------------------------------
+    # SQFI FIX (144 → 48) — rebuild FamilyMember with correct names + fields
+    # ----------------------------------------------------------------------
+    if fam_name == "sqfi":
+        r = r[:48]
+        base = r[0]
+
+        new_list = []
+        for i in range(48):
+            src = r[i]
+            new_list.append(
+                FamilyMember(
+                    _name=fam_name + str(src.lattice.index),
+                    type=base.type,
+                    status=base.status,
+                    survey=base.survey,
+                    dev_info=base.dev_info,
+                    lattice=LatticeInstance(
+                        index=src.lattice.index,
+                        type=base.lattice.type
+                    ),
+                    pos=src.pos,
+                )
+            )
+
+        r = new_list
+
+    return r
 
 def handle_families(families_json: Mapping[str, Union[str, Mapping]]) -> Families:
     def convert(families_info):

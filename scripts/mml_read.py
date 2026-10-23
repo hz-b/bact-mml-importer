@@ -50,7 +50,7 @@ def build_magnet_data(elem, *, type_name: str, subtype: str) -> Magnet:
     return Magnet(
         type=type_name,
         subtype=subtype,
-        name=elem._name,
+        name=elem.name,
         forward_curve=fwd_curve,
         backward_curve=bwd_curve,
         pc=trl
@@ -67,16 +67,12 @@ def export_for_dt4acc(families_data, filename: str):
         build_magnet_data(elem=elem, type_name="Steerer", subtype="vertical")
         for elem in families_data.get("VCM").elements
     ]
-    quadrupoles_o = [
-        build_magnet_data(elem=elem, type_name="Quadrupole", subtype="O-dont-understand")
-        for elem in families_data.get("SQFO").elements
-    ]
     quadrupoles_i = [
         build_magnet_data(elem=elem, type_name="Quadrupole", subtype="I-dont-understand")
         for elem in families_data.get("SQFI").elements
     ]
 
-    all_magnets = horizontal_steerers + vertical_steerers + quadrupoles_o + quadrupoles_i
+    all_magnets = horizontal_steerers + vertical_steerers + quadrupoles_i
 
     # bpm = families_data.get("BPMx")
     # tmp = jsons.dump(families_data)
